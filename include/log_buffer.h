@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <vector>
-#include <string>
 #include <mutex>
 #include <array>
 #include <functional>
@@ -12,9 +11,10 @@ namespace corn {
 
 namespace detail {
 
+template <typename T>
 class LogBuffer {
 public:
-    LogBuffer(const std::function<void(std::vector<std::string>)> &callback, size_t max_size)
+    LogBuffer(const std::function<void(std::vector<T>)> &callback, size_t max_size)
             : MAX_SIZE(max_size), current_index_(0), current_buffer_(&buffers_[0]), backup_buffer_(&buffers_[1]),
               should_process_(false), callback_(callback) {
         buffers_[0].resize(MAX_SIZE);
@@ -27,7 +27,7 @@ public:
     }
 
     // multi-producer threads use this interface
-    void append(std::string log) {
+    void append(T log) {
         size_t idx;
         do {
             idx = current_index_.fetch_add(1, std::memory_order_relaxed);
@@ -54,6 +54,7 @@ public:
 
 private:
     void swapBuffers() {
+        std::unique_lock<std::mutex> lock(process_mutex_);
         std::swap(current_buffer_, backup_buffer_);
         current_index_.store(0, std::memory_order_release);
     }
@@ -67,10 +68,10 @@ private:
 private:
     const size_t MAX_SIZE;
     std::atomic<size_t> current_index_;
-    std::array<std::vector<std::string>, 2> buffers_;
-    std::vector<std::string> *current_buffer_;
-    std::vector<std::string> *backup_buffer_;
-    std::function<void(std::vector<std::string>)> callback_;
+    std::array<std::vector<T>, 2> buffers_;
+    std::vector<T> *current_buffer_;
+    std::vector<T> *backup_buffer_;
+    std::function<void(std::vector<T>)> callback_;
 
     // for process
     std::mutex process_mutex_;

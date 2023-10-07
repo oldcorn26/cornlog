@@ -18,9 +18,9 @@ LogFileAppender::LogFileAppender(const std::string &basename)
 }
 
 LogFileAppender::~LogFileAppender() {
-  if (started_) {
-    stop();
-  }
+    if (started_) {
+        stop();
+    }
 }
 
 void LogFileAppender::start() {
@@ -31,6 +31,7 @@ void LogFileAppender::start() {
 
 void LogFileAppender::stop() {
     running_ = false;
+    for (int i{}; i < gLogConfig.log_buffer_len; ++i) buffer_.append({std::source_location(), ""});
     persist_thread_.join();
     started_ = false;
 }
@@ -60,10 +61,30 @@ void LogFileAppender::threadFunc() {
     }
 }
 
-void LogFileAppender::writeLogs(std::vector<std::string> logs) {
+// void LogFileAppender::writeLogs(std::vector<std::string> logs) {
+//     // static char logStr[54 * gLogConfig.log_buffer_len];
+//     // size_t current_offset = 0;
+
+//     // for (auto &log : logs) {
+//     //     if (log.empty()) continue;
+//     //     memcpy(logStr + current_offset, log.c_str(), log.size());
+//     //     current_offset += log.size();
+//     // }
+//     // fileWriter_->append(logStr, current_offset);
+//     for (auto &log : logs) {
+//         if (log.empty()) continue;
+//         fileWriter_->append(log.c_str(), log.size());
+//     }
+// }
+
+void LogFileAppender::writeLogs(std::vector<Output> logs) {
     for (auto &log : logs) {
-        if (log.empty()) continue;
-        fileWriter_->append(log.c_str(), log.size());
+        if (log.second.empty()) continue;
+        auto logStr = std::format("{}:{}{}\n",
+                                  log.first.file_name(),
+                                  log.first.line(),
+                                  log.second);
+        fileWriter_->append(logStr.c_str(), logStr.size());
     }
 }
 

@@ -5,6 +5,8 @@
 
 namespace corn {
 
+namespace detail {
+
 template <typename T>
 class Singleton {
 public:
@@ -37,5 +39,7 @@ template <typename T>
 pthread_once_t Singleton<T>::once_control = PTHREAD_ONCE_INIT;
 
 template<typename T> T *Singleton<T>::value_ = nullptr;
+
+} // namespace detail
 
 } // namespace corn

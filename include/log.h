@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <cstring>
 #include <sstream>
-
 #include "log_level.h"
 #include "log_config.h"
 #include "log_file_appender.h"
@@ -39,29 +38,25 @@ consteval std::size_t compile_time_strlen(const char* str) {
     return len;
 }
 
-} // namespace detail
+inline LogFileAppender logFileAppender(gLogConfig.file_option.file_path);
 
-template<typename... Args>
-void genericLog(LogLevel lev, detail::WithSourceLocation<std::format_string<Args...>> fmt, Args &&... args) {
+template<LogLevel lev, typename... Args>
+void genericLog(detail::WithSourceLocation<std::format_string<Args...>> fmt, Args &&... args) {
     if (lev < gLogConfig.log_level) {
         return;
     }
-    static detail::LogFileAppender logFileAppender(gLogConfig.file_option.file_path);
-    auto const &loc = fmt.location();
-    std::string log_str = std::format("{}:{} [{}] {}\n",
-                                      loc.file_name(),
-                                      loc.line(),
-                                      detail::to_string(lev),
-                                      std::vformat(fmt.format().get(), std::make_format_args(args...)));
-
-    // std::cout << log_str;
-    logFileAppender.append(std::move(log_str));
+    Output output = {fmt.location(),
+                     std::string(detail::to_output_string(lev)) +
+                     std::vformat(fmt.format().get(), std::make_format_args(args...))};
+    logFileAppender.append(std::move(output));
 }
+
+} // namespace detail
 
 #define FUNCTION(name) \
     template<typename... Args> \
     void log##name(detail::WithSourceLocation<std::format_string<Args...>> fmt, Args &&... args) { \
-            return genericLog(LogLevel::name, std::move(fmt), std::forward<Args>(args)...);\
+            return genericLog<LogLevel::name>(std::move(fmt), std::forward<Args>(args)...);\
             }
 FOREACH_LOG_LEVEL(FUNCTION)
 #undef FUNCTION

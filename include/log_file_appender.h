@@ -3,9 +3,10 @@
 #include <vector>
 #include <string>
 #include <memory>
-
+#include <source_location>
 #include "log_buffer.h"
 #include "file_writer.h"
+#include "log_level.h"
 
 namespace corn {
 
@@ -31,13 +32,12 @@ private:
 
     void initFileWriter();
 
-    void writeLogs(std::vector<std::string> logs);
+    void writeLogs(std::vector<Output> logs);
 
     bool started_;
     bool running_;
-//    time_t persist_period_;
     std::string basename_;
-    LogBuffer buffer_;
+    LogBuffer<Output> buffer_;
     std::thread persist_thread_;
     std::unique_ptr<FileWriter> fileWriter_;
 };

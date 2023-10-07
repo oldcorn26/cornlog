@@ -57,7 +57,6 @@ void MMapFileWriter::flush() {
 
 uint32_t MMapFileWriter::writtenBytes() const { return writed_; }
 
-
 AppendFileWriter::AppendFileWriter(const std::string &filename)
         : fp_(::fopen(filename.c_str(), "ae")) {
     ::setbuffer(fp_, buffer_, sizeof buffer_);

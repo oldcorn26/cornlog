@@ -8,7 +8,7 @@
 namespace corn {
 
 struct LogConfig {
-  uint32_t log_buffer_len = 100;
+  uint32_t log_buffer_len = 200;
   uint32_t log_buffer_nums = 2;
   LogLevel log_level = LogLevel::Info;
 
@@ -16,7 +16,7 @@ struct LogConfig {
     std::string file_path = "../log";
 
     // Log rolling size and interval, exclusive for AsyncFileAppender
-    uint32_t log_file_size = 512 * 1024;
+    uint32_t log_file_size = 2048 * 1024;
     uint32_t log_file_margin = 1024;
     uint32_t log_flush_file_size;
     uint32_t log_flush_interval;
